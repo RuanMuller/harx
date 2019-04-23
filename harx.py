@@ -239,11 +239,16 @@ def getUTF8(data):
 # -----------------------------------------------------------------------------
 # Process Object
 # -----------------------------------------------------------------------------
-def processObject(idx, content, filename, path):
+def processObject(idx, content, filename, path, numberFiles):
 	"""Common Object Processing"""
 
 	data = getB64Decode(content)
-	file = getFilename(filename)
+
+	if numberFiles:
+		file = str(idx) + "-" + getFilename(filename)
+	else:
+		file = getFilename(filename)
+
 	writeFile(path + file, data)
 	md5 = getMD5(path + file)
 	size = getSize(path + file)
@@ -261,7 +266,7 @@ def processObject(idx, content, filename, path):
 # -----------------------------------------------------------------------------
 # Extract File Assets
 # -----------------------------------------------------------------------------
-def extractObject(objectList, index, path=""):
+def extractObject(objectList, index, path="", numberFiles=False):
 	"""Extract File Assets"""
 
 	if path != "":
@@ -276,7 +281,7 @@ def extractObject(objectList, index, path=""):
 
 		while idx != len(objectList):
 			if 'content' in objectList[idx]:
-				processObject(idx, objectList[idx]['content'], objectList[idx]['url'], path)
+				processObject(idx, objectList[idx]['content'], objectList[idx]['url'], path, numberFiles)
 			else:
 				print "[" + str(idx).rjust(3, " ") + "] No content for object found."
 
@@ -288,7 +293,7 @@ def extractObject(objectList, index, path=""):
 
 		if idx in objectList:
 			if 'content' in objectList[idx]:
-				processObject(idx, objectList[idx]['content'], objectList[idx]['url'], path)
+				processObject(idx, objectList[idx]['content'], objectList[idx]['url'], path, numberFiles)
 			else:
 				print "[" + str(index).rjust(3, " ") + "] No content for object found."
 		else:
@@ -322,6 +327,7 @@ if __name__ == "__main__":
 	parser.add_argument('-x', '--eXtract', type=int, help="eXtract object matching index from -l output")
 	parser.add_argument('-xa', '--eXtractAll', action='store_true', default=0, help="eXtract all objects")
 	parser.add_argument('-d', '--directory', help="[DIRECTORY] to extract files to")
+	parser.add_argument('-n', '--number', action='store_true', default=0, help="prepend output filename with index from -l output")
 	parser.add_argument('har_file')
 	args = parser.parse_args()
 
@@ -352,9 +358,9 @@ if __name__ == "__main__":
 		objectList = getObjects(har)
 
 		if args.directory:
-			extractObject(objectList, args.eXtract, args.directory)
+			extractObject(objectList, args.eXtract, args.directory, args.number)
 		else:
-			extractObject(objectList, args.eXtract)
+			extractObject(objectList, args.eXtract, "", args.number)
 
 	### Extract All Objects
 	if args.eXtractAll:
@@ -362,6 +368,6 @@ if __name__ == "__main__":
 		objectList = getObjects(har)
 
 		if args.directory:
-			extractObject(objectList, 'all', args.directory)
+			extractObject(objectList, 'all', args.directory, args.number)
 		else:
-			extractObject(objectList, 'all')
+			extractObject(objectList, 'all', "", args.number)
